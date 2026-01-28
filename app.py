@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from backend.rag.retriever import retrieve_laws
 from backend.rag.prompt_builder import build_prompt
 from backend.ai.openai_client import ask_llm
 import json
@@ -39,58 +38,39 @@ class AskRequest(BaseModel):
     history: list = []
 
 # ---------------------------
-# Language detection
+# Language detection (improved)
 # ---------------------------
 
 def detect_language(text: str):
     words = text.lower().split()
     hits = sum(1 for w in words if w in HINGLISH)
-    return "hinglish" if hits >= 2 else "english"
+
+    if hits >= 1:
+        return "hinglish"
+    return "english"
 
 # ---------------------------
-# Law retrieval (simple & explainable)
+# Law retrieval
 # ---------------------------
 
 def retrieve_laws(query):
     found = []
 
+    q = query.lower()
+
     for sec in IPC:
-        if sec["section"].lower() in query.lower() or sec["title"].lower() in query.lower():
+        if sec["title"].lower() in q:
             found.append(f"IPC {sec['section']} – {sec['title']}")
 
     for sec in CRPC:
-        if sec["section"].lower() in query.lower() or sec["title"].lower() in query.lower():
+        if sec["title"].lower() in q:
             found.append(f"CrPC {sec['section']} – {sec['title']}")
 
     return found[:5]
 
 # ---------------------------
-# Answer builder
-# ---------------------------
-
-def build_answer(query, history, lang):
-    context = " ".join([h["text"] for h in history[-2:]])
-
-    if lang == "hinglish":
-        answer = (
-            f"Aapke sawaal ke base par:\n\n"
-            f"{query}\n\n"
-            f"Is situation ko Indian law ke hisaab se dekha jaata hai. "
-            f"Final decision hamesha court aur case ke facts par depend karta hai."
-        )
-    else:
-        answer = (
-            f"Based on your question:\n\n"
-            f"{query}\n\n"
-            f"Under Indian law, the outcome depends on facts, evidence, and court judgment."
-        )
-
-    return answer
-
-# ---------------------------
 # Routes
 # ---------------------------
-context = ""
 
 @app.get("/")
 def root():
@@ -98,16 +78,20 @@ def root():
 
 @app.post("/ask")
 def ask_question(req: AskRequest):
+
     query = req.query.strip()
 
+    # 🧠 conversation memory
     conversation_context = ""
     if req.history:
         conversation_context = "\n".join(
-            [f"User: {h['user']}\nBot: {h['bot']}" for h in req.history[-3:]]
+            [
+                f"User: {h['user']}\nBot: {h['bot']}"
+                for h in req.history[-3:]
+            ]
         )
 
     language = detect_language(query)
-
     retrieved_sections = retrieve_laws(query)
 
     prompt = build_prompt(
