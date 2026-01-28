@@ -1,0 +1,108 @@
+{
+  "kya": "what",
+  "kyu": "why",
+  "kyun": "why",
+  "kaise": "how",
+  "kab": "when",
+  "kahan": "where",
+  "kaun": "who",
+
+  "hai": "is",
+  "hain": "are",
+  "tha": "was",
+  "thi": "was",
+  "the": "were",
+  "hoga": "will be",
+  "hogi": "will be",
+
+  "kar": "do",
+  "kare": "do",
+  "karna": "to do",
+  "kiya": "did",
+  "kiye": "done",
+
+  "sakta": "can",
+  "sakti": "can",
+  "sakte": "can",
+
+  "hona": "to be",
+  "ho": "be",
+  "hua": "happened",
+
+  "bina": "without",
+  "saath": "with",
+  "andar": "inside",
+  "bahar": "outside",
+  "upar": "above",
+  "neeche": "below",
+
+  "police": "police",
+  "thana": "police station",
+  "sipahi": "police officer",
+  "daroga": "police officer",
+
+  "warrant": "warrant",
+  "arrest": "arrest",
+  "pakad": "arrest",
+  "giraftar": "arrest",
+  "hirasat": "custody",
+
+  "phone": "mobile phone",
+  "mobile": "mobile phone",
+  "call": "call",
+  "recording": "recording",
+  "chat": "messages",
+  "whatsapp": "messages",
+
+  "case": "case",
+  "report": "complaint",
+  "complaint": "complaint",
+  "fir": "first information report",
+
+  "court": "court",
+  "judge": "judge",
+  "vakil": "lawyer",
+  "advocate": "lawyer",
+  "lawyer": "lawyer",
+
+  "jail": "prison",
+  "saza": "punishment",
+  "punishment": "punishment",
+  "jurmana": "fine",
+  "fine": "fine",
+
+  "rights": "rights",
+  "adhikar": "rights",
+  "kanun": "law",
+  "kanoon": "law",
+  "law": "law",
+
+  "illegal": "illegal",
+  "legal": "legal",
+
+  "allowed": "allowed",
+  "not": "not",
+  "nahi": "not",
+  "nahin": "not",
+
+  "agar": "if",
+  "lekin": "but",
+  "par": "but",
+
+  "koi": "any",
+  "kuch": "some",
+  "sab": "all",
+
+  "mera": "my",
+  "meri": "my",
+  "mere": "my",
+
+  "tum": "you",
+  "aap": "you",
+  "hum": "we",
+
+  "pakka": "sure",
+  "galat": "wrong",
+  "sahi": "correct",
+  "scene": "situation"
+}
