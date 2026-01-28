@@ -1,102 +1,78 @@
-from fastapi import FastAPI
+import os
+import traceback
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from dotenv import load_dotenv
+from openai import OpenAI
 
-# NLP
-from backend.nlp.translator import translate_hinglish
-from backend.nlp.query_normalizer import normalize_query
-from backend.nlp.keyword_expander import expand_keywords
-from backend.nlp.intent_classifier import classify_intent
+# Load env variables
+load_dotenv()
 
-# RAG
-from backend.rag.retriever import retrieve
-from backend.rag.ranker import rank_documents
-from backend.rag.prompt_builder import build_prompt
-
-# LLM
-from backend.ai.openai_client import generate_answer
-
-
-# -------------------------
-# FastAPI setup
-# -------------------------
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI(
-    title="NyayBot API",
-    version="1.0",
-    description="Indian Legal Information Assistant (Educational Use Only)"
+    title="NYAYABOT Backend",
+    description="Legal AI Assistant (Hinglish + English)",
+    version="1.0"
 )
 
+# CORS (important for frontend later)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # frontend + github pages
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Validate API key early
+if not OPENAI_API_KEY:
+    print("❌ OPENAI_API_KEY not found in environment variables")
 
-# -------------------------
-# Request schema
-# -------------------------
-
-class AskRequest(BaseModel):
-    query: str
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 
-# -------------------------
-# Main endpoint
-# -------------------------
+@app.get("/")
+def root():
+    return {
+        "status": "running",
+        "message": "NYAYABOT backend is live"
+    }
+
 
 @app.post("/ask")
-def ask(req: AskRequest):
+def ask(query: str = Query(..., min_length=3)):
     try:
-        user_query = req.query.strip()
+        prompt = f"""
+You are NyayaBot — an Indian legal assistant.
+Answer in simple Hinglish.
+Explain law clearly, practically, and politely.
 
-        # 1️⃣ Hinglish → English
-        translated = translate_hinglish(user_query)
+User question:
+{query}
+"""
 
-        # 2️⃣ Normalize
-        normalized = normalize_query(translated)
-
-        # 3️⃣ Expand keywords
-        expanded = expand_keywords(normalized)
-
-        # 4️⃣ Intent classification
-        intent = classify_intent(expanded)
-
-        # 5️⃣ Retrieve legal docs
-        docs = retrieve(expanded)
-
-        # 6️⃣ Rank documents
-        ranked_docs = rank_documents(expanded, docs)
-
-        # 7️⃣ Build LLM prompt
-        prompt = build_prompt(
-            query=expanded,
-            intent=intent,
-            documents=ranked_docs
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a helpful Indian legal assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3
         )
 
-        # 8️⃣ Generate answer
-        answer = generate_answer(prompt)
+        answer = response.choices[0].message.content
 
         return {
-            "query": user_query,
-            "translated_query": translated,
-            "intent": intent,
-            "answer": answer,
-            "sources": [
-                {
-                    "section": d.get("title"),
-                    "source": d.get("source")
-                }
-                for d in ranked_docs[:5]
-            ],
-            "disclaimer": "Educational information only. Not legal advice."
+            "query": query,
+            "answer": answer
         }
 
     except Exception as e:
+        print("🔥 ERROR OCCURRED")
+        print(traceback.format_exc())
+
         return {
-            "error": str(e)
+            "error": "Internal Server Error",
+            "details": str(e)
         }
