@@ -1,108 +1,21 @@
-{
-  "kya": "what",
-  "kyu": "why",
-  "kyun": "why",
-  "kaise": "how",
-  "kab": "when",
-  "kahan": "where",
-  "kaun": "who",
-
-  "hai": "is",
-  "hain": "are",
-  "tha": "was",
-  "thi": "was",
-  "the": "were",
-  "hoga": "will be",
-  "hogi": "will be",
-
-  "kar": "do",
-  "kare": "do",
-  "karna": "to do",
-  "kiya": "did",
-  "kiye": "done",
-
-  "sakta": "can",
-  "sakti": "can",
-  "sakte": "can",
-
-  "hona": "to be",
-  "ho": "be",
-  "hua": "happened",
-
-  "bina": "without",
-  "saath": "with",
-  "andar": "inside",
-  "bahar": "outside",
-  "upar": "above",
-  "neeche": "below",
-
-  "police": "police",
-  "thana": "police station",
-  "sipahi": "police officer",
-  "daroga": "police officer",
-
-  "warrant": "warrant",
-  "arrest": "arrest",
-  "pakad": "arrest",
-  "giraftar": "arrest",
-  "hirasat": "custody",
-
-  "phone": "mobile phone",
-  "mobile": "mobile phone",
-  "call": "call",
-  "recording": "recording",
-  "chat": "messages",
-  "whatsapp": "messages",
-
-  "case": "case",
-  "report": "complaint",
-  "complaint": "complaint",
-  "fir": "first information report",
-
-  "court": "court",
-  "judge": "judge",
-  "vakil": "lawyer",
-  "advocate": "lawyer",
-  "lawyer": "lawyer",
-
-  "jail": "prison",
-  "saza": "punishment",
-  "punishment": "punishment",
-  "jurmana": "fine",
-  "fine": "fine",
-
-  "rights": "rights",
-  "adhikar": "rights",
-  "kanun": "law",
-  "kanoon": "law",
-  "law": "law",
-
-  "illegal": "illegal",
-  "legal": "legal",
-
-  "allowed": "allowed",
-  "not": "not",
-  "nahi": "not",
-  "nahin": "not",
-
-  "agar": "if",
-  "lekin": "but",
-  "par": "but",
-
-  "koi": "any",
-  "kuch": "some",
-  "sab": "all",
-
-  "mera": "my",
-  "meri": "my",
-  "mere": "my",
-
-  "tum": "you",
-  "aap": "you",
-  "hum": "we",
-
-  "pakka": "sure",
-  "galat": "wrong",
-  "sahi": "correct",
-  "scene": "situation"
-}
+[
+  "kya","kaise","kyu","kyon","kab","kahan","kaun","kis","kisne","kisiko","kisi","kuch",
+  "hai","hain","tha","thi","the","ho","hona","hoga","hogi","honge","raha","rahi",
+  "rahe","karta","karti","karte","kiya","kiye","karna","kar","ki","ka","ke",
+  "mera","meri","mere","tera","teri","tere","uska","uski","uske","unka","unki","unke",
+  "apna","apni","apne","yeh","woh","vo","iska","iski","iske","usme","isme","mein",
+  "se","ko","mein","par","aur","magar","lekin","ya","toh","tab","jab","jabki",
+  "hamesha","kabhi","kabhi","aisa","aisa","aisa","waise","waise","bilkul","thik","sahi",
+  "nahi","nahin","bilkul","thoda","zyada","bahut","kam","sirf","bas","bhi","liye",
+  "kanun","vakil","giraftar","thana","mukadma","nyayalaya","nyay","insaaf","vidhi","adhivakta","samvidhan",
+  "sipahi","chori","daka","chori","chor","apradh","fauj","senani","senapati","sena","saza","qatl","maut",
+  "zimmedar","jimmedar","jurmana","jama","dhokha","paise","paisa","ghar","zameen","makaan","jameen",
+  "shaadi","talak","santaan","santaan","patni","pati",
+  "bhai","behen","beta","beti","maa","mata","pita","baap","dada","nana","dadi","nani",
+  "rozi","jurm","kamai","kam","naukri","rozgar","rozgaar","tankhah","kaam",
+  "jamin","saboot","gawah","gawahi","adhikar","niyam","dhara","vidhan","qanoon","sarkar","matter",
+  "khilaf","madad","bina","saath","andar","bahar","upar","neeche","aage","peeche","dain","baen",
+  "samne","piche","andar","bahar","saamne","peeche","dayein","bayein",
+  "pehle","baad","ab","karne","karneka","karneke","aneka","aneke","wala","wali","wale",
+  "haan","ha","na","nahi","ji"
+]

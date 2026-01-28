@@ -1,69 +1,114 @@
 import os
-import traceback
-from fastapi import FastAPI, Query
+import json
+import re
+from typing import List, Optional
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
+from pydantic import BaseModel
 from openai import OpenAI
 
-# Load env vars
-load_dotenv()
+# -------------------------------------------------
+# Load Hinglish grammar words
+# -------------------------------------------------
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+HINGLISH_PATH = "backend/nlp/hinglish_words.json"
+
+with open(HINGLISH_PATH, "r", encoding="utf-8") as f:
+    HINGLISH_WORDS = set(json.load(f))
+
+# -------------------------------------------------
+# Setup
+# -------------------------------------------------
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = FastAPI(
-    title="NyayaBot Backend",
-    description="Indian Legal AI Assistant (Hinglish)",
-    version="1.0"
+    title="NyayaBot",
+    description="Indian Legal Assistant with Memory",
+    version="1.2"
 )
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Create client
-client = OpenAI(api_key=OPENAI_API_KEY)
+# -------------------------------------------------
+# Models
+# -------------------------------------------------
 
+class Message(BaseModel):
+    role: str
+    content: str
 
-@app.get("/")
-def root():
-    return {"status": "NyayaBot backend running"}
+class AskRequest(BaseModel):
+    query: str
+    history: Optional[List[Message]] = []
 
+# -------------------------------------------------
+# Improved Hinglish detection
+# -------------------------------------------------
+
+def detect_language(text: str) -> str:
+    text = text.lower()
+    words = re.findall(r"[a-z]+", text)
+
+    hits = sum(1 for w in words if w in HINGLISH_WORDS)
+
+    # threshold-based detection
+    if hits >= 2:
+        return "hinglish"
+    return "english"
+
+# -------------------------------------------------
+# API
+# -------------------------------------------------
 
 @app.post("/ask")
-def ask(query: str = Query(..., min_length=3)):
-    try:
-        prompt = f"""
-You are NyayaBot — an Indian legal assistant.
+def ask(req: AskRequest):
 
-Answer in simple Hinglish.
-Explain law practically.
-Avoid heavy legal jargon.
+    language = detect_language(req.query)
 
-User question:
-{query}
-"""
+    # ---- memory ----
+    conversation = ""
+    for msg in req.history[-6:]:
+        conversation += f"{msg.role.upper()}: {msg.content}\n"
 
-        response = client.responses.create(
-            model="gpt-4o-mini",
-            input=prompt
+    # ---- system behavior ----
+    if language == "hinglish":
+        system_prompt = (
+            "You are NyayaBot, an Indian legal assistant. "
+            "Reply strictly in simple Hinglish using Roman Hindi. "
+            "Do not switch to pure English."
+        )
+    else:
+        system_prompt = (
+            "You are NyayaBot, an Indian legal assistant. "
+            "Reply clearly in simple English."
         )
 
-        answer = response.output_text
+    final_prompt = f"""
+Conversation so far:
+{conversation}
 
-        return {
-            "query": query,
-            "answer": answer
-        }
+User question:
+{req.query}
 
-    except Exception as e:
-        print("🔥 ERROR")
-        print(traceback.format_exc())
+Explain applicable Indian law clearly.
+Do not provide legal advice.
+"""
 
-        return {
-            "error": "Internal Server Error",
-            "details": str(e)
-        }
+    response = client.responses.create(
+        model="gpt-4o-mini",
+        input=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": final_prompt}
+        ]
+    )
+
+    return {
+        "language": language,
+        "answer": response.output_text
+    }
