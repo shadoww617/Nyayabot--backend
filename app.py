@@ -5,18 +5,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# Load env variables
+# Load env vars
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI(
-    title="NYAYABOT Backend",
-    description="Legal AI Assistant (Hinglish + English)",
+    title="NyayaBot Backend",
+    description="Indian Legal AI Assistant (Hinglish)",
     version="1.0"
 )
 
-# CORS (important for frontend later)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,19 +24,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Validate API key early
-if not OPENAI_API_KEY:
-    print("❌ OPENAI_API_KEY not found in environment variables")
-
+# Create client
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 @app.get("/")
 def root():
-    return {
-        "status": "running",
-        "message": "NYAYABOT backend is live"
-    }
+    return {"status": "NyayaBot backend running"}
 
 
 @app.post("/ask")
@@ -45,23 +38,21 @@ def ask(query: str = Query(..., min_length=3)):
     try:
         prompt = f"""
 You are NyayaBot — an Indian legal assistant.
+
 Answer in simple Hinglish.
-Explain law clearly, practically, and politely.
+Explain law practically.
+Avoid heavy legal jargon.
 
 User question:
 {query}
 """
 
-        response = client.chat.completions.create(
+        response = client.responses.create(
             model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a helpful Indian legal assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.3
+            input=prompt
         )
 
-        answer = response.choices[0].message.content
+        answer = response.output_text
 
         return {
             "query": query,
@@ -69,7 +60,7 @@ User question:
         }
 
     except Exception as e:
-        print("🔥 ERROR OCCURRED")
+        print("🔥 ERROR")
         print(traceback.format_exc())
 
         return {
