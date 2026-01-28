@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from backend.rag.retriever import retrieve_laws
+from backend.rag.prompt_builder import build_prompt
+from backend.ai.openai_client import ask_llm
 import json
 import os
 
@@ -87,20 +90,38 @@ def build_answer(query, history, lang):
 # ---------------------------
 # Routes
 # ---------------------------
+context = ""
 
 @app.get("/")
 def root():
     return {"status": "NyayaBot backend running"}
 
 @app.post("/ask")
-def ask(req: AskRequest):
-    lang = detect_language(req.query)
-    laws = retrieve_laws(req.query)
-    answer = build_answer(req.query, req.history, lang)
+def ask_question(req: AskRequest):
+    query = req.query.strip()
+
+    conversation_context = ""
+    if req.history:
+        conversation_context = "\n".join(
+            [f"User: {h['user']}\nBot: {h['bot']}" for h in req.history[-3:]]
+        )
+
+    language = detect_language(query)
+
+    retrieved_sections = retrieve_laws(query)
+
+    prompt = build_prompt(
+        query=query,
+        context=conversation_context,
+        laws=retrieved_sections,
+        language=language
+    )
+
+    answer = ask_llm(prompt)
 
     return {
-        "language": lang,
-        "query": req.query,
+        "query": query,
+        "language": language,
         "answer": answer,
-        "laws": laws
+        "references": retrieved_sections
     }
