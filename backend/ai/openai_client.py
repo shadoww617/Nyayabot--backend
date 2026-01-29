@@ -23,8 +23,6 @@ def generate_answer(prompt: str) -> str:
                         "Explain laws in simple and neutral language. "
                         "Do not give legal advice. "
                         "Do not invent sections."
-                        "Do not provide explanations for things outside indian law."
-                        "Simply say, please ask me law related questions in case of queries not related to law"
                     )
                 },
                 {
