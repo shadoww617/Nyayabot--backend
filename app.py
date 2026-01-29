@@ -1,18 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from backend.rag.prompt_builder import build_prompt
-from backend.ai.openai_client import ask_llm
 import json
 import os
 from openai import OpenAI
+from typing import List, Optional
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = FastAPI(
     title="NyayaBot",
     description="Indian Legal Assistant",
-    version="1.2"
+    version="2.0"
 )
 
 app.add_middleware(
@@ -22,12 +21,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # ---------------------------
 # Load data
 # ---------------------------
-
-BASE_DIR = os.path.dirname(__file__)
 
 def load_json(path):
     with open(path, "r", encoding="utf-8") as f:
@@ -38,15 +34,19 @@ IPC = load_json("backend/data/ipc.json")
 CRPC = load_json("backend/data/crpc.json")
 
 # ---------------------------
-# Request schema
+# Request model
 # ---------------------------
+
+class Message(BaseModel):
+    role: str
+    content: str
 
 class AskRequest(BaseModel):
     query: str
-    history: list = []
+    history: Optional[List[Message]] = []
 
 # ---------------------------
-# Language detection (improved)
+# Language detection
 # ---------------------------
 
 def detect_language(text: str):
@@ -62,53 +62,57 @@ def detect_language(text: str):
 # ---------------------------
 
 def retrieve_laws(query):
-    found = []
-
     q = query.lower()
+    refs = []
 
     for sec in IPC:
         if sec["title"].lower() in q:
-            found.append(f"IPC {sec['section']} – {sec['title']}")
+            refs.append(f"IPC {sec['section']} – {sec['title']}")
 
     for sec in CRPC:
         if sec["title"].lower() in q:
-            found.append(f"CrPC {sec['section']} – {sec['title']}")
+            refs.append(f"CrPC {sec['section']} – {sec['title']}")
 
-    return found[:5]
+    return refs[:5]
 
 # ---------------------------
-# Routes
+# API
 # ---------------------------
 
 @app.post("/ask")
 def ask(req: AskRequest):
 
     language = detect_language(req.query)
+    law_refs = retrieve_laws(req.query)
 
+    # Build conversation memory
     conversation = ""
     for msg in req.history[-6:]:
         conversation += f"{msg.role.upper()}: {msg.content}\n"
 
     if language == "hinglish":
         system_prompt = (
-            "You are NyayaBot, an Indian legal assistant. "
-            "Reply in clear, natural Hinglish using English letters only. "
+            "You are NyayaBot, an Indian legal assistant.\n"
+            "Reply ONLY in Hinglish using English letters.\n"
+            "Do NOT say Bot, AI, Assistant or system.\n"
             "Be polite, structured and easy to understand."
         )
     else:
         system_prompt = (
-            "You are NyayaBot, an Indian legal assistant. "
-            "Reply in simple, clear English."
+            "You are NyayaBot, an Indian legal assistant.\n"
+            "Reply in simple, clear English.\n"
+            "Do NOT say Bot, AI, Assistant or system."
         )
 
     final_prompt = f"""
-Conversation so far:
+Previous conversation:
 {conversation}
 
 User question:
 {req.query}
 
-Explain clearly using Indian law where relevant.
+If relevant, explain using Indian law.
+Be educational, not judgmental.
 """
 
     response = client.responses.create(
@@ -121,5 +125,6 @@ Explain clearly using Indian law where relevant.
 
     return {
         "language": language,
+        "law_references": law_refs,
         "answer": response.output_text
     }
