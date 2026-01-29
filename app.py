@@ -5,8 +5,15 @@ from backend.rag.prompt_builder import build_prompt
 from backend.ai.openai_client import ask_llm
 import json
 import os
+from openai import OpenAI
 
-app = FastAPI(title="NyayaBot – Indian Legal Assistant")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+app = FastAPI(
+    title="NyayaBot",
+    description="Indian Legal Assistant",
+    version="1.2"
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,6 +21,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # ---------------------------
 # Load data
@@ -72,40 +80,46 @@ def retrieve_laws(query):
 # Routes
 # ---------------------------
 
-@app.get("/")
-def root():
-    return {"status": "NyayaBot backend running"}
-
 @app.post("/ask")
-def ask_question(req: AskRequest):
+def ask(req: AskRequest):
 
-    query = req.query.strip()
+    language = detect_language(req.query)
 
-    # 🧠 conversation memory
-    conversation_context = ""
-    if req.history:
-        conversation_context = "\n".join(
-            [
-                f"User: {h['user']}\nBot: {h['bot']}"
-                for h in req.history[-3:]
-            ]
+    conversation = ""
+    for msg in req.history[-6:]:
+        conversation += f"{msg.role.upper()}: {msg.content}\n"
+
+    if language == "hinglish":
+        system_prompt = (
+            "You are NyayaBot, an Indian legal assistant. "
+            "Reply in clear, natural Hinglish using English letters only. "
+            "Be polite, structured and easy to understand."
+        )
+    else:
+        system_prompt = (
+            "You are NyayaBot, an Indian legal assistant. "
+            "Reply in simple, clear English."
         )
 
-    language = detect_language(query)
-    retrieved_sections = retrieve_laws(query)
+    final_prompt = f"""
+Conversation so far:
+{conversation}
 
-    prompt = build_prompt(
-        query=query,
-        context=conversation_context,
-        laws=retrieved_sections,
-        language=language
+User question:
+{req.query}
+
+Explain clearly using Indian law where relevant.
+"""
+
+    response = client.responses.create(
+        model="gpt-4o-mini",
+        input=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": final_prompt}
+        ],
     )
 
-    answer = ask_llm(prompt)
-
     return {
-        "query": query,
         "language": language,
-        "answer": answer,
-        "references": retrieved_sections
+        "answer": response.output_text
     }
